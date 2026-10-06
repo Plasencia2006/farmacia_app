@@ -12,7 +12,7 @@ const Usuario = sequelize.define('Usuario', {
         type: DataTypes.ENUM('administrador', 'moderador', 'usuario'),
         defaultValue: 'usuario'
     }
-}, { tableName: 'usuarios', timestamps: true });
+}, { tableName: 'usuarios', timestamps: true , dialect: 'postgres' });
 
 // Hashear password antes de guardar
 Usuario.beforeCreate(async (user) => {
