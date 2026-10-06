@@ -3,9 +3,10 @@ extends layout
 
 block content
     .page-header
-        h1 💰 Órdenes de Venta
+        h1  Órdenes de Venta
+        // Admin y moderador pueden crear
         if usuario.rol === "administrador" || usuario.rol === "moderador"
-            button.btn-success(onclick="abrirModalOrdenVenta()") ➕ Nueva Orden de Venta
+            button.btn-success(onclick="abrirModalOrdenVenta()")  Nueva Orden de Venta
     
     .table-container
         table.tabla
@@ -15,6 +16,7 @@ block content
                     th Fecha Emisión
                     th Motivo
                     th Situación
+                    // Admin y moderador ven acciones
                     if usuario.rol === "administrador" || usuario.rol === "moderador"
                         th Acciones
             tbody
@@ -27,80 +29,85 @@ block content
                             span.badge(class=ord.Situacion === 'completada' ? 'badge-usuario' : 'badge-moderador')= ord.Situacion
                         if usuario.rol === "administrador" || usuario.rol === "moderador"
                             td
-                                button.btn-edit(onclick=`editarOrdenVenta(${ord.NroOrdenVta}, '${ord.Motivo || ''}', '${ord.Situacion}')`) ✏️ Editar
-                                button.btn-delete(onclick=`eliminarOrdenVenta(${ord.NroOrdenVta})`) 🗑️ Eliminar
+                                // Editar: admin y moderador
+                                button.btn-edit(onclick=`editarOrdenVenta(${ord.NroOrdenVta}, '${ord.Motivo || ''}', '${ord.Situacion}')`)  Editar
+                                // Eliminar: solo admin
+                                if usuario.rol === "administrador"
+                                    button.btn-delete(onclick=`eliminarOrdenVenta(${ord.NroOrdenVta})`)  Eliminar
 
-    #modalOrdenVenta.modal-overlay
-        .modal
-            .modal-header
-                h2#modalOrdenVentaTitle Nueva Orden de Venta
-                button.modal-close(onclick="cerrarModalOrdenVenta()") ×
-            form#formOrdenVenta
-                input#ordenVentaId(type="hidden")
-                .form-group
-                    label Fecha de Emisión
-                    input#ordenVentaFecha(type="date" required)
-                .form-group
-                    label Motivo
-                    input#ordenVentaMotivo(type="text" placeholder="Ej: Venta mostrador" required)
-                .form-group
-                    label Situación
-                    select#ordenVentaSituacion(required)
-                        option(value="pendiente") Pendiente
-                        option(value="completada") Completada
-                        option(value="cancelada") Cancelada
-                .form-actions
-                    button.btn-primary(type="submit") 💾 Guardar Orden
-                    button.btn-secondary(type="button" onclick="cerrarModalOrdenVenta()") Cancelar
+    if usuario.rol === "administrador" || usuario.rol === "moderador"
+        #modalOrdenVenta.modal-overlay
+            .modal
+                .modal-header
+                    h2#modalOrdenVentaTitle Nueva Orden de Venta
+                    button.modal-close(onclick="cerrarModalOrdenVenta()") ×
+                form#formOrdenVenta
+                    input#ordenVentaId(type="hidden")
+                    .form-group
+                        label Fecha de Emisión
+                        input#ordenVentaFecha(type="date" required)
+                    .form-group
+                        label Motivo
+                        input#ordenVentaMotivo(type="text" placeholder="Ej: Venta mostrador" required)
+                    .form-group
+                        label Situación
+                        select#ordenVentaSituacion(required)
+                            option(value="pendiente") Pendiente
+                            option(value="completada") Completada
+                            option(value="cancelada") Cancelada
+                    .form-actions
+                        button.btn-primary(type="submit")  Guardar Orden
+                        button.btn-secondary(type="button" onclick="cerrarModalOrdenVenta()") Cancelar
 
 block scripts
-    script.
-        const token = document.cookie.split('token=')[1];
-        const headers = { Authorization: `Bearer ${token}` };
-        
-        window.abrirModalOrdenVenta = function() {
-            document.getElementById('modalOrdenVentaTitle').textContent = 'Nueva Orden de Venta';
-            document.getElementById('formOrdenVenta').reset();
-            document.getElementById('ordenVentaId').value = '';
-            document.getElementById('ordenVentaFecha').value = new Date().toISOString().split('T')[0];
-            document.getElementById('modalOrdenVenta').classList.add('active');
-        }
-        
-        window.editarOrdenVenta = function(id, motivo, situacion) {
-            document.getElementById('modalOrdenVentaTitle').textContent = 'Editar Orden de Venta';
-            document.getElementById('ordenVentaId').value = id;
-            document.getElementById('ordenVentaMotivo').value = motivo;
-            document.getElementById('ordenVentaSituacion').value = situacion;
-            document.getElementById('modalOrdenVenta').classList.add('active');
-        }
-        
-        window.cerrarModalOrdenVenta = function() {
-            document.getElementById('modalOrdenVenta').classList.remove('active');
-        }
-        
-        window.eliminarOrdenVenta = async function(id) {
-            if (!confirm('¿Eliminar esta orden de venta?')) return;
-            try {
-                await axios.delete(`${window.API}/ordenes/ventas/${id}`, { headers });
-                location.reload();
-            } catch (err) { alert('Error: ' + err.message); }
-        }
-        
-        document.getElementById('formOrdenVenta').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const id = document.getElementById('ordenVentaId').value;
-            const data = {
-                fechaEmision: document.getElementById('ordenVentaFecha').value,
-                Motivo: document.getElementById('ordenVentaMotivo').value,
-                Situacion: document.getElementById('ordenVentaSituacion').value
-            };
-            try {
-                if (id) await axios.put(`${window.API}/ordenes/ventas/${id}`, data, { headers });
-                else await axios.post(`${window.API}/ordenes/ventas`, data, { headers });
-                location.reload();
-            } catch (err) { alert('Error: ' + (err.response?.data?.error || err.message)); }
-        });
-        
-        document.getElementById('modalOrdenVenta').addEventListener('click', (e) => {
-            if (e.target.classList.contains('modal-overlay')) window.cerrarModalOrdenVenta();
-        });
+    if usuario.rol === "administrador" || usuario.rol === "moderador"
+        script.
+            const token = document.cookie.split('token=')[1];
+            const headers = { Authorization: `Bearer ${token}` };
+            
+            window.abrirModalOrdenVenta = function() {
+                document.getElementById('modalOrdenVentaTitle').textContent = 'Nueva Orden de Venta';
+                document.getElementById('formOrdenVenta').reset();
+                document.getElementById('ordenVentaId').value = '';
+                document.getElementById('ordenVentaFecha').value = new Date().toISOString().split('T')[0];
+                document.getElementById('modalOrdenVenta').classList.add('active');
+            }
+            
+            window.editarOrdenVenta = function(id, motivo, situacion) {
+                document.getElementById('modalOrdenVentaTitle').textContent = 'Editar Orden de Venta';
+                document.getElementById('ordenVentaId').value = id;
+                document.getElementById('ordenVentaMotivo').value = motivo;
+                document.getElementById('ordenVentaSituacion').value = situacion;
+                document.getElementById('modalOrdenVenta').classList.add('active');
+            }
+            
+            window.cerrarModalOrdenVenta = function() {
+                document.getElementById('modalOrdenVenta').classList.remove('active');
+            }
+            
+            window.eliminarOrdenVenta = async function(id) {
+                if (!confirm('¿Eliminar esta orden de venta?')) return;
+                try {
+                    await axios.delete(`${window.API}/ordenes/ventas/${id}`, { headers });
+                    location.reload();
+                } catch (err) { alert('Error: ' + err.message); }
+            }
+            
+            document.getElementById('formOrdenVenta').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const id = document.getElementById('ordenVentaId').value;
+                const data = {
+                    fechaEmision: document.getElementById('ordenVentaFecha').value,
+                    Motivo: document.getElementById('ordenVentaMotivo').value,
+                    Situacion: document.getElementById('ordenVentaSituacion').value
+                };
+                try {
+                    if (id) await axios.put(`${window.API}/ordenes/ventas/${id}`, data, { headers });
+                    else await axios.post(`${window.API}/ordenes/ventas`, data, { headers });
+                    location.reload();
+                } catch (err) { alert('Error: ' + (err.response?.data?.error || err.message)); }
+            });
+            
+            document.getElementById('modalOrdenVenta').addEventListener('click', (e) => {
+                if (e.target.classList.contains('modal-overlay')) window.cerrarModalOrdenVenta();
+            });

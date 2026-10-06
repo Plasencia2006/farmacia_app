@@ -27,7 +27,7 @@ block content
                             span.badge.badge-usuario= cat.productos ? cat.productos.length : 0
                         if usuario.rol === "administrador" || usuario.rol === "moderador"
                             td
-                                button.btn-edit(onclick=`editarCategoria(${cat.id}, '${cat.nombre}', '${cat.descripcion || ''}')`) ✏️ Editar
+                                button.btn-edit(onclick=`editarCategoria(${cat.id}, '${cat.nombre}', '${cat.descripcion || ''}')`)  Editar
                                 button.btn-delete(onclick=`eliminarCategoria(${cat.id})`) ️ Eliminar
 
     // MODAL CREAR/EDITAR

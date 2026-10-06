@@ -3,9 +3,10 @@ extends layout
 
 block content
     .page-header
-        h1 💊 Gestión de Medicamentos
+        h1  Gestión de Medicamentos
+        // Solo admin y moderador pueden crear
         if usuario.rol === "administrador" || usuario.rol === "moderador"
-            button.btn-success(onclick="abrirModalMed()") ➕ Nuevo Medicamento
+            button.btn-success(onclick="abrirModalMed()")  Nuevo Medicamento
     
     .table-container
         table.tabla
@@ -18,6 +19,7 @@ block content
                     th Precio Unit.
                     th Tipo
                     th Especialidad
+                    // Solo admin y moderador ven acciones
                     if usuario.rol === "administrador" || usuario.rol === "moderador"
                         th Acciones
             tbody
@@ -31,103 +33,109 @@ block content
                         td S/. #{med.precioVentaUni.toFixed(2)}
                         td= med.tipoMedicamento ? med.tipoMedicamento.descripcion : '-'
                         td= med.especialidad ? med.especialidad.descripcionEsp : '-'
+                        // Solo admin y moderador ven botones de acción
                         if usuario.rol === "administrador" || usuario.rol === "moderador"
                             td
+                                // Editar: admin y moderador
                                 button.btn-edit(onclick=`editarMed(${med.CodMedicamento}, '${med.descripcionMed}', '${med.Presentacion}', ${med.stock}, ${med.precioVentaUni}, ${med.CodTipoMed || ''}, ${med.CodEspec || ''})`) ✏️ Editar
-                                button.btn-delete(onclick=`eliminarMed(${med.CodMedicamento})`) 🗑️ Eliminar
+                                // Eliminar: solo admin
+                                if usuario.rol === "administrador"
+                                    button.btn-delete(onclick=`eliminarMed(${med.CodMedicamento})`)  Eliminar
 
-    #modalMed.modal-overlay
-        .modal
-            .modal-header
-                h2#modalMedTitle Nuevo Medicamento
-                button.modal-close(onclick="cerrarModalMed()") ×
-            form#formMed
-                input#medId(type="hidden")
-                .form-group
-                    label Descripción
-                    input#medDesc(type="text" required)
-                .form-group
-                    label Presentación
-                    input#medPres(type="text" required)
-                .form-row(style="display: flex; gap: 15px;")
-                    .form-group(style="flex: 1;")
-                        label Stock
-                        input#medStock(type="number" min="0" required)
-                    .form-group(style="flex: 1;")
-                        label Precio Unitario
-                        input#medPrecio(type="number" step="0.01" min="0" required)
-                .form-row(style="display: flex; gap: 15px;")
-                    .form-group(style="flex: 1;")
-                        label Tipo de Medicamento
-                        select#medTipo
-                            option(value="") Seleccionar...
-                            each tipo in tipos
-                                option(value=tipo.CodTipoMed)= tipo.descripcion
-                    .form-group(style="flex: 1;")
-                        label Especialidad
-                        select#medEspec
-                            option(value="") Seleccionar...
-                            each esp in especialidades
-                                option(value=esp.CodEspec)= esp.descripcionEsp
-                .form-actions
-                    button.btn-primary(type="submit") 💾 Guardar
-                    button.btn-secondary(type="button" onclick="cerrarModalMed()") Cancelar
+    // Modal (solo se renderiza si el usuario puede crear/editar)
+    if usuario.rol === "administrador" || usuario.rol === "moderador"
+        #modalMed.modal-overlay
+            .modal
+                .modal-header
+                    h2#modalMedTitle Nuevo Medicamento
+                    button.modal-close(onclick="cerrarModalMed()") ×
+                form#formMed
+                    input#medId(type="hidden")
+                    .form-group
+                        label Descripción
+                        input#medDesc(type="text" required)
+                    .form-group
+                        label Presentación
+                        input#medPres(type="text" required)
+                    .form-row(style="display: flex; gap: 15px;")
+                        .form-group(style="flex: 1;")
+                            label Stock
+                            input#medStock(type="number" min="0" required)
+                        .form-group(style="flex: 1;")
+                            label Precio Unitario
+                            input#medPrecio(type="number" step="0.01" min="0" required)
+                    .form-row(style="display: flex; gap: 15px;")
+                        .form-group(style="flex: 1;")
+                            label Tipo de Medicamento
+                            select#medTipo
+                                option(value="") Seleccionar...
+                                each tipo in tipos
+                                    option(value=tipo.CodTipoMed)= tipo.descripcion
+                        .form-group(style="flex: 1;")
+                            label Especialidad
+                            select#medEspec
+                                option(value="") Seleccionar...
+                                each esp in especialidades
+                                    option(value=esp.CodEspec)= esp.descripcionEsp
+                    .form-actions
+                        button.btn-primary(type="submit")  Guardar
+                        button.btn-secondary(type="button" onclick="cerrarModalMed()") Cancelar
 
 block scripts
-    script.
-        // ✅ NO redeclarar API - usar window.API de auth.js
-        const token = document.cookie.split('token=')[1];
-        const headers = { Authorization: `Bearer ${token}` };
-        
-        window.abrirModalMed = function() {
-            document.getElementById('modalMedTitle').textContent = 'Nuevo Medicamento';
-            document.getElementById('formMed').reset();
-            document.getElementById('medId').value = '';
-            document.getElementById('modalMed').classList.add('active');
-        }
-        
-        window.editarMed = function(id, desc, pres, stock, precio, tipo, espec) {
-            document.getElementById('modalMedTitle').textContent = 'Editar Medicamento';
-            document.getElementById('medId').value = id;
-            document.getElementById('medDesc').value = desc;
-            document.getElementById('medPres').value = pres;
-            document.getElementById('medStock').value = stock;
-            document.getElementById('medPrecio').value = precio;
-            document.getElementById('medTipo').value = tipo;
-            document.getElementById('medEspec').value = espec;
-            document.getElementById('modalMed').classList.add('active');
-        }
-        
-        window.cerrarModalMed = function() {
-            document.getElementById('modalMed').classList.remove('active');
-        }
-        
-        window.eliminarMed = async function(id) {
-            if (!confirm('¿Eliminar medicamento?')) return;
-            try {
-                await axios.delete(`${window.API}/medicamentos/${id}`, { headers });
-                location.reload();
-            } catch (err) { alert('Error: ' + err.message); }
-        }
-        
-        document.getElementById('formMed').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const id = document.getElementById('medId').value;
-            const data = {
-                descripcionMed: document.getElementById('medDesc').value,
-                Presentacion: document.getElementById('medPres').value,
-                stock: parseInt(document.getElementById('medStock').value),
-                precioVentaUni: parseFloat(document.getElementById('medPrecio').value),
-                CodTipoMed: document.getElementById('medTipo').value || null,
-                CodEspec: document.getElementById('medEspec').value || null
-            };
-            try {
-                if (id) await axios.put(`${window.API}/medicamentos/${id}`, data, { headers });
-                else await axios.post(`${window.API}/medicamentos`, data, { headers });
-                location.reload();
-            } catch (err) { alert('Error: ' + (err.response?.data?.error || err.message)); }
-        });
-        
-        document.getElementById('modalMed').addEventListener('click', (e) => {
-            if (e.target.classList.contains('modal-overlay')) window.cerrarModalMed();
-        });
+    if usuario.rol === "administrador" || usuario.rol === "moderador"
+        script.
+            const token = document.cookie.split('token=')[1];
+            const headers = { Authorization: `Bearer ${token}` };
+            
+            window.abrirModalMed = function() {
+                document.getElementById('modalMedTitle').textContent = 'Nuevo Medicamento';
+                document.getElementById('formMed').reset();
+                document.getElementById('medId').value = '';
+                document.getElementById('modalMed').classList.add('active');
+            }
+            
+            window.editarMed = function(id, desc, pres, stock, precio, tipo, espec) {
+                document.getElementById('modalMedTitle').textContent = 'Editar Medicamento';
+                document.getElementById('medId').value = id;
+                document.getElementById('medDesc').value = desc;
+                document.getElementById('medPres').value = pres;
+                document.getElementById('medStock').value = stock;
+                document.getElementById('medPrecio').value = precio;
+                document.getElementById('medTipo').value = tipo;
+                document.getElementById('medEspec').value = espec;
+                document.getElementById('modalMed').classList.add('active');
+            }
+            
+            window.cerrarModalMed = function() {
+                document.getElementById('modalMed').classList.remove('active');
+            }
+            
+            window.eliminarMed = async function(id) {
+                if (!confirm('¿Eliminar medicamento?')) return;
+                try {
+                    await axios.delete(`${window.API}/medicamentos/${id}`, { headers });
+                    location.reload();
+                } catch (err) { alert('Error: ' + err.message); }
+            }
+            
+            document.getElementById('formMed').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const id = document.getElementById('medId').value;
+                const data = {
+                    descripcionMed: document.getElementById('medDesc').value,
+                    Presentacion: document.getElementById('medPres').value,
+                    stock: parseInt(document.getElementById('medStock').value),
+                    precioVentaUni: parseFloat(document.getElementById('medPrecio').value),
+                    CodTipoMed: document.getElementById('medTipo').value || null,
+                    CodEspec: document.getElementById('medEspec').value || null
+                };
+                try {
+                    if (id) await axios.put(`${window.API}/medicamentos/${id}`, data, { headers });
+                    else await axios.post(`${window.API}/medicamentos`, data, { headers });
+                    location.reload();
+                } catch (err) { alert('Error: ' + (err.response?.data?.error || err.message)); }
+            });
+            
+            document.getElementById('modalMed').addEventListener('click', (e) => {
+                if (e.target.classList.contains('modal-overlay')) window.cerrarModalMed();
+            });

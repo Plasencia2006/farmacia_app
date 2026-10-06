@@ -8,50 +8,50 @@ block content
             h2= usuario.nombre
             .rol-badge(class=`rol-${usuario.rol}`)
                 if usuario.rol === 'administrador'
-                    span 👑 Administrador
+                    span  Administrador
                 else if usuario.rol === 'moderador'
-                    span 🔧 Moderador
+                    span  Moderador
                 else
-                    span 👤 Usuario
+                    span  Usuario
         
         .stats-grid
             .stat-card
-                .stat-icon 💊
+                .stat-icon 
                 .stat-info
                     .stat-number= medicamentosCount || 0
                     .stat-label Medicamentos
             .stat-card
-                .stat-icon 🏭
+                .stat-icon 
                 .stat-info
                     .stat-number= laboratoriosCount || 0
                     .stat-label Laboratorios
             .stat-card
-                .stat-icon 🛒
+                .stat-icon 
                 .stat-info
                     .stat-number= ordenesCompraCount || 0
                     .stat-label Órdenes Compra
             .stat-card
-                .stat-icon 💰
+                .stat-icon 
                 .stat-info
                     .stat-number= ordenesVentaCount || 0
                     .stat-label Órdenes Venta
     
     .cards-grid
         .card
-            .card-icon 💊
+            .card-icon 
             h3 Gestión de Medicamentos
             p Administra el catálogo completo de medicamentos, tipos y especialidades.
             a.card-link(href="/medicamentos") Ir a Medicamentos →
         
         .card
-            .card-icon 🏭
+            .card-icon 
             h3 Laboratorios
             p Gestiona los laboratorios proveedores de medicamentos.
             a.card-link(href="/laboratorios") Ir a Laboratorios →
         
         if usuario.rol === "administrador" || usuario.rol === "moderador"
             .card
-                .card-icon 🛒
+                .card-icon 
                 h3 Órdenes de Compra
                 p Registra y controla las compras a proveedores.
                 a.card-link(href="/ordenes-compra") Ir a Compras →
@@ -65,7 +65,7 @@ block content
         
         if usuario.rol === "administrador"
             .card.card-admin
-                .card-icon 👑
+                .card-icon 
                 h3 Panel de Administración
                 p Tienes acceso completo a todas las funcionalidades del sistema.
                 a.card-link(href="#") Configuración →
