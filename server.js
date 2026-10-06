@@ -17,8 +17,6 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-
-// 👇 ESTA LÍNEA ES CRÍTICA - debe estar ANTES de las rutas
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Configurar Pug
@@ -35,10 +33,22 @@ app.get('/', (req, res) => {
     res.redirect('/login');
 });
 
+// Sincronizar BD y levantar servidor
 const PORT = process.env.PORT || 3000;
-sequelize.sync({ alter: true })
-    .then(() => {
-        console.log('✅ BD sincronizada');
-        app.listen(PORT, () => console.log(`🚀 http://localhost:${PORT}`));
+
+sequelize.sync()
+    .then(async () => {
+        console.log('✅ Base de datos sincronizada');
+
+        // Ejecutar seeder automáticamente en desarrollo
+        if (process.env.NODE_ENV !== 'production') {
+            try {
+                await require('./seeders/seed');
+            } catch (err) {
+                console.log('️  Seeder ya ejecutado o error:', err.message);
+            }
+        }
+
+        app.listen(PORT, () => console.log(` Servidor corriendo en puerto ${PORT}`));
     })
-    .catch(err => console.error('❌ Error BD:', err));
+    .catch(err => console.error('❌ Error al sincronizar BD:', err));

@@ -60,13 +60,37 @@ router.get('/dashboard', verificarSesion, async (req, res) => {
     });
 });
 
+// routes/views.js
+
 router.get('/medicamentos', verificarSesion, async (req, res) => {
-    const medicamentos = await Medicamento.findAll({
-        include: [{ model: TipoMedic, as: 'tipoMedicamento' }, { model: Especialidad, as: 'especialidad' }]
-    });
-    const tipos = await TipoMedic.findAll();
-    const especialidades = await Especialidad.findAll();
-    res.render('medicamentos', { titulo: 'Medicamentos', usuario: req.usuario, medicamentos, tipos, especialidades });
+    try {
+        // Importar los modelos
+        const { Medicamento, TipoMedic, Especialidad } = require('../models/index');
+
+        // Consultar medicamentos con sus relaciones
+        const medicamentos = await Medicamento.findAll({
+            include: [
+                { model: TipoMedic, as: 'tipoMedicamento' },
+                { model: Especialidad, as: 'especialidad' }
+            ]
+        });
+
+        // ✅ CONSULTAR TIPOS Y ESPECIALIDADES (esto es lo que faltaba)
+        const tipos = await TipoMedic.findAll();
+        const especialidades = await Especialidad.findAll();
+
+        // ✅ PASAR TODAS LAS VARIABLES A LA VISTA
+        res.render('medicamentos', {
+            titulo: 'Medicamentos',
+            usuario: req.usuario,
+            medicamentos,
+            tipos,           // 👈 IMPORTANTE
+            especialidades   // 👈 IMPORTANTE
+        });
+    } catch (error) {
+        console.error('Error al cargar medicamentos:', error);
+        res.status(500).send('Error al cargar la página de medicamentos');
+    }
 });
 
 router.get('/laboratorios', verificarSesion, async (req, res) => {
