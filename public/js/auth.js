@@ -1,17 +1,17 @@
 // public/js/auth.js
 
-const API = 'http://localhost:3000/api';
+// ❌ ANTES (esto causaba el error):
+// const API = 'http://localhost:3000/api';
 
-// ==========================================
-// VALIDACIÓN DE EMAIL
-// ==========================================
+// ✅ AHORA (URL relativa - funciona en localhost Y en Render):
+const API = '/api';
+
+// Validación en el front-end
 function validarEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-// ==========================================
 // LOGIN
-// ==========================================
 const formLogin = document.getElementById('formLogin');
 if (formLogin) {
     formLogin.addEventListener('submit', async (e) => {
@@ -26,7 +26,7 @@ if (formLogin) {
         let valido = true;
 
         if (!validarEmail(email)) {
-            document.getElementById('errorEmail').textContent = '❌ Email inválido';
+            document.getElementById('errorEmail').textContent = ' Email inválido';
             valido = false;
         }
         if (password.length < 6) {
@@ -49,9 +49,7 @@ if (formLogin) {
     });
 }
 
-// ==========================================
 // REGISTRO
-// ==========================================
 const formRegistro = document.getElementById('formRegistro');
 if (formRegistro) {
     formRegistro.addEventListener('submit', async (e) => {
@@ -69,7 +67,7 @@ if (formRegistro) {
         let valido = true;
 
         if (nombre.length < 3) {
-            document.getElementById('errorNombre').textContent = ' Mínimo 3 caracteres';
+            document.getElementById('errorNombre').textContent = '❌ Mínimo 3 caracteres';
             valido = false;
         }
         if (!validarEmail(email)) {
@@ -77,7 +75,7 @@ if (formRegistro) {
             valido = false;
         }
         if (password.length < 6) {
-            document.getElementById('errorPassword').textContent = '❌ Mínimo 6 caracteres';
+            document.getElementById('errorPassword').textContent = ' Mínimo 6 caracteres';
             valido = false;
         }
         if (!valido) return;
@@ -92,11 +90,9 @@ if (formRegistro) {
     });
 }
 
-// ==========================================
-// CERRAR SESIÓN - Función Global
-// ==========================================
+// CERRAR SESIÓN
 window.cerrarSesion = function () {
-    console.log(" Cerrando sesión...");
+    console.log('🔴 Cerrando sesión...');
 
     // Eliminar cookie
     document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
@@ -106,7 +102,7 @@ window.cerrarSesion = function () {
     localStorage.removeItem('token');
     sessionStorage.removeItem('token');
 
-    console.log("✅ Cookie eliminada. Redirigiendo...");
+    console.log('✅ Cookie eliminada. Redirigiendo...');
 
     // Redirigir al login
     window.location.href = '/login';

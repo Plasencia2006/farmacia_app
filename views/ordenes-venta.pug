@@ -56,6 +56,7 @@ block content
 block scripts
     script.
         // ⚠️ NO redeclarar API - ya viene de auth.js
+        const API = '/api';
         const token = document.cookie.split('token=')[1];
         const headers = { Authorization: `Bearer ${token}` };
         
