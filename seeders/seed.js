@@ -19,19 +19,17 @@ async function sembrar() {
         await sequelize.sync();
         console.log('✅ Tablas sincronizadas\n');
 
-        // Verificar si ya existen datos
         const usuariosExistentes = await Usuario.count();
         const laboratoriosExistentes = await Laboratorio.count();
 
         if (usuariosExistentes > 0 && laboratoriosExistentes > 0) {
             console.log('ℹ️  La base de datos ya tiene datos. Omitiendo seeder.');
             console.log('✅ Proceso completado exitosamente.\n');
-            process.exit(0); // ✅ Salir con código 0 (éxito)
+            return; // ✅ Solo retornar, NO process.exit()
         }
 
         console.log('🌱 Insertando datos iniciales...\n');
 
-        // 1. USUARIOS
         console.log('👥 Insertando usuarios...');
         const passwordHash = await bcrypt.hash('123456', 8);
 
@@ -42,7 +40,6 @@ async function sembrar() {
         ]);
         console.log('   ✅ 3 usuarios insertados\n');
 
-        // 2. LABORATORIOS
         console.log(' Insertando laboratorios...');
         const [lab1, lab2, lab3] = await Laboratorio.bulkCreate([
             { razonSocial: 'Laboratorios Pfizer S.A.', direccion: 'Av. Javier Prado 123, Lima', telefono: '01-555-1234', email: 'contacto@pfizer.pe', contacto: 'Juan Pérez' },
@@ -51,7 +48,6 @@ async function sembrar() {
         ]);
         console.log('   ✅ 3 laboratorios insertados\n');
 
-        // 3. ESPECIALIDADES
         console.log('💊 Insertando especialidades...');
         const [esp1, esp2, esp3, esp4] = await Especialidad.bulkCreate([
             { descripcionEsp: 'Analgésicos' },
@@ -61,7 +57,6 @@ async function sembrar() {
         ]);
         console.log('   ✅ 4 especialidades insertadas\n');
 
-        // 4. TIPOS DE MEDICAMENTOS
         console.log('💊 Insertando tipos de medicamentos...');
         const [tipo1, tipo2, tipo3, tipo4] = await TipoMedic.bulkCreate([
             { descripcion: 'Tableta' },
@@ -71,7 +66,6 @@ async function sembrar() {
         ]);
         console.log('   ✅ 4 tipos de medicamentos insertados\n');
 
-        // 5. MEDICAMENTOS
         console.log('💊 Insertando medicamentos...');
         const meds = await Medicamento.bulkCreate([
             { descripcionMed: 'Paracetamol 500mg', fechaFabricacion: '2025-01-15', fechaVencimiento: '2027-01-15', Presentacion: 'Caja x 20 tabletas', stock: 100, precioVentaUni: 0.50, precioVentaPres: 10.00, Marca: 'Genfar', CodTipoMed: tipo1.CodTipoMed, CodEspec: esp1.CodEspec },
@@ -83,7 +77,6 @@ async function sembrar() {
         ]);
         console.log('   ✅ 6 medicamentos insertados\n');
 
-        // 6. ORDEN DE COMPRA
         console.log('🛒 Insertando órdenes de compra...');
         const ordenCompra1 = await OrdenCompra.create({
             fechaEmision: new Date('2025-10-01'),
@@ -99,7 +92,6 @@ async function sembrar() {
         ]);
         console.log('   ✅ Órdenes de compra insertadas\n');
 
-        // 7. ORDEN DE VENTA
         console.log('💰 Insertando órdenes de venta...');
         const ordenVenta1 = await OrdenVenta.create({
             fechaEmision: new Date('2025-10-06'),
@@ -114,20 +106,18 @@ async function sembrar() {
         console.log('   ✅ Órdenes de venta insertadas\n');
 
         console.log('═══════════════════════════════════════════');
-        console.log('🎉 ¡Datos iniciales insertados con éxito!');
+        console.log(' ¡Datos iniciales insertados con éxito!');
         console.log('═══════════════════════════════════════════\n');
         console.log('🔐 Credenciales de prueba:');
         console.log('   Admin:     admin@farmacia.com / 123456');
         console.log('   Moderador: mod@farmacia.com / 123456');
         console.log('   Usuario:   user@farmacia.com / 123456\n');
 
-        process.exit(0); // ✅ Salir con código 0 (éxito)
-
     } catch (error) {
-        console.error('❌ Error en el seeder:', error);
+        console.error(' Error en el seeder:', error);
         console.error('Detalles:', error.message);
-        process.exit(1); // ❌ Solo salir con error si hay un problema real
     }
 }
 
+// Ejecutar el seeder
 sembrar();
