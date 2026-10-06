@@ -16,5 +16,6 @@ COPY . .
 # Exponer puerto
 EXPOSE 3000
 
-# Ejecutar seeder y luego iniciar el servidor
-CMD ["sh", "-c", "node seeders/seed.js && node server.js"]
+# Comando de inicio: ejecutar seeder y luego servidor
+# Usamos "sh -c" con ";" para que el servidor arranque aunque el seeder termine
+CMD ["sh", "-c", "node seeders/seed.js; node server.js"]
