@@ -28,12 +28,14 @@ app.use('/api/auth', authRoutes);
 app.use('/api', apiRoutes);
 app.use('/', viewRoutes);
 
-// 🔧 ENDPOINT TEMPORAL para forzar el seeder
-app.get('/force-seed', async (req, res) => {
-    try {
-        console.log('🔄 Forzando ejecución del seeder...');
+// Ruta raíz
+app.get('/', (req, res) => {
+    res.redirect('/login');
+});
 
-        // Importar la función del seeder
+// Función para ejecutar el seeder
+async function ejecutarSeeder() {
+    try {
         const {
             Usuario, Laboratorio, Especialidad, TipoMedic,
             Medicamento, OrdenCompra, DetalleOrdenCompra,
@@ -41,30 +43,19 @@ app.get('/force-seed', async (req, res) => {
         } = require('./models/index');
         const bcrypt = require('bcryptjs');
 
-        // Sincronizar tablas (sin borrar datos existentes)
+        console.log('🔄 Sincronizando base de datos...');
         await sequelize.sync();
         console.log('✅ Tablas sincronizadas');
 
-        // Verificar si ya existen datos
         const usuariosExistentes = await Usuario.count();
+        const laboratoriosExistentes = await Laboratorio.count();
 
-        if (usuariosExistentes > 0) {
-            // Borrar datos existentes para reiniciar
-            console.log('⚠️  Borrando datos existentes...');
-            await DetalleOrdenVta.destroy({ where: {} });
-            await DetalleOrdenCompra.destroy({ where: {} });
-            await OrdenVenta.destroy({ where: {} });
-            await OrdenCompra.destroy({ where: {} });
-            await Medicamento.destroy({ where: {} });
-            await TipoMedic.destroy({ where: {} });
-            await Especialidad.destroy({ where: {} });
-            await Laboratorio.destroy({ where: {} });
-            await Usuario.destroy({ where: {} });
-            console.log('✅ Datos borrados');
+        if (usuariosExistentes > 0 && laboratoriosExistentes > 0) {
+            console.log('ℹ️  La base de datos ya tiene datos. Omitiendo seeder.');
+            return;
         }
 
-        // Insertar datos
-        console.log(' Insertando datos iniciales...');
+        console.log('🌱 Insertando datos iniciales...');
 
         const passwordHash = await bcrypt.hash('123456', 8);
 
@@ -73,12 +64,14 @@ app.get('/force-seed', async (req, res) => {
             { nombre: 'Moderador Ventas', email: 'mod@farmacia.com', password: passwordHash, rol: 'moderador' },
             { nombre: 'Cliente Regular', email: 'user@farmacia.com', password: passwordHash, rol: 'usuario' }
         ]);
+        console.log('   ✅ 3 usuarios insertados');
 
         const [lab1, lab2, lab3] = await Laboratorio.bulkCreate([
             { razonSocial: 'Laboratorios Pfizer S.A.', direccion: 'Av. Javier Prado 123, Lima', telefono: '01-555-1234', email: 'contacto@pfizer.pe', contacto: 'Juan Pérez' },
             { razonSocial: 'Bayer S.A.', direccion: 'Av. Arequipa 456, Lima', telefono: '01-555-5678', email: 'ventas@bayer.pe', contacto: 'María López' },
             { razonSocial: 'La Santé Laboratories', direccion: 'Av. Brasil 789, Lima', telefono: '01-555-9012', email: 'info@lasante.pe', contacto: 'Carlos Rodríguez' }
         ]);
+        console.log('   ✅ 3 laboratorios insertados');
 
         const [esp1, esp2, esp3, esp4] = await Especialidad.bulkCreate([
             { descripcionEsp: 'Analgésicos' },
@@ -86,6 +79,7 @@ app.get('/force-seed', async (req, res) => {
             { descripcionEsp: 'Vitaminas y Suplementos' },
             { descripcionEsp: 'Antiinflamatorios' }
         ]);
+        console.log('   ✅ 4 especialidades insertadas');
 
         const [tipo1, tipo2, tipo3, tipo4] = await TipoMedic.bulkCreate([
             { descripcion: 'Tableta' },
@@ -93,6 +87,7 @@ app.get('/force-seed', async (req, res) => {
             { descripcion: 'Cápsula' },
             { descripcion: 'Inyectable' }
         ]);
+        console.log('   ✅ 4 tipos de medicamentos insertados');
 
         const meds = await Medicamento.bulkCreate([
             { descripcionMed: 'Paracetamol 500mg', fechaFabricacion: '2025-01-15', fechaVencimiento: '2027-01-15', Presentacion: 'Caja x 20 tabletas', stock: 100, precioVentaUni: 0.50, precioVentaPres: 10.00, Marca: 'Genfar', CodTipoMed: tipo1.CodTipoMed, CodEspec: esp1.CodEspec },
@@ -102,6 +97,7 @@ app.get('/force-seed', async (req, res) => {
             { descripcionMed: 'Jarabe para la tos', fechaFabricacion: '2025-04-01', fechaVencimiento: '2026-04-01', Presentacion: 'Frasco x 120ml', stock: 40, precioVentaUni: 3.50, precioVentaPres: 3.50, Marca: 'Vick', CodTipoMed: tipo2.CodTipoMed, CodEspec: esp1.CodEspec },
             { descripcionMed: 'Ceftriaxona 1g', fechaFabricacion: '2025-06-01', fechaVencimiento: '2026-06-01', Presentacion: 'Vial inyectable', stock: 30, precioVentaUni: 5.00, precioVentaPres: 5.00, Marca: 'Rocephin', CodTipoMed: tipo4.CodTipoMed, CodEspec: esp2.CodEspec }
         ]);
+        console.log('   ✅ 6 medicamentos insertados');
 
         const ordenCompra1 = await OrdenCompra.create({
             fechaEmision: new Date('2025-10-01'),
@@ -115,6 +111,7 @@ app.get('/force-seed', async (req, res) => {
             { NroOrdenC: ordenCompra1.NroOrdenC, CodMedicamento: meds[0].CodMedicamento, descripcion: 'Paracetamol 500mg', cantidad: 200, precio: 0.30, montouni: 60.00 },
             { NroOrdenC: ordenCompra1.NroOrdenC, CodMedicamento: meds[1].CodMedicamento, descripcion: 'Amoxicilina 500mg', cantidad: 100, precio: 0.80, montouni: 80.00 }
         ]);
+        console.log('   ✅ Órdenes de compra insertadas');
 
         const ordenVenta1 = await OrdenVenta.create({
             fechaEmision: new Date('2025-10-06'),
@@ -126,38 +123,24 @@ app.get('/force-seed', async (req, res) => {
             { NroOrdenVta: ordenVenta1.NroOrdenVta, CodMedicamento: meds[0].CodMedicamento, descripcionMed: 'Paracetamol 500mg', cantidadRequerida: 2 },
             { NroOrdenVta: ordenVenta1.NroOrdenVta, CodMedicamento: meds[2].CodMedicamento, descripcionMed: 'Vitamina C 1000mg', cantidadRequerida: 1 }
         ]);
+        console.log('   ✅ Órdenes de venta insertadas');
+        console.log('🎉 ¡Datos iniciales insertados con éxito!');
 
-        res.json({
-            mensaje: '✅ Seeder ejecutado con éxito',
-            datos: {
-                usuarios: 3,
-                laboratorios: 3,
-                especialidades: 4,
-                tiposMedicamentos: 4,
-                medicamentos: 6,
-                ordenesCompra: 1,
-                ordenesVenta: 1
-            }
-        });
     } catch (error) {
-        console.error('❌ Error en el seeder:', error);
-        res.status(500).json({
-            error: 'Error al ejecutar el seeder',
-            detalle: error.message
-        });
+        console.error('❌ Error en el seeder:', error.message);
+        // No detener el servidor si el seeder falla
     }
-});
+}
 
-// Ruta raíz
-app.get('/', (req, res) => {
-    res.redirect('/login');
-});
-
-// Sincronizar BD y levantar servidor
+// Iniciar servidor con seeder integrado
 const PORT = process.env.PORT || 3000;
-sequelize.sync()
-    .then(() => {
-        console.log('✅ Base de datos sincronizada');
-        app.listen(PORT, () => console.log(`🚀 Servidor corriendo en puerto ${PORT}`));
-    })
-    .catch(err => console.error('❌ Error al sincronizar BD:', err));
+
+ejecutarSeeder().then(() => {
+    app.listen(PORT, () => {
+        console.log('🚀 Servidor corriendo en puerto ' + PORT);
+        console.log('🌐 URL: https://farmacia-app-b1ii.onrender.com');
+    });
+}).catch(err => {
+    console.error('❌ Error al iniciar:', err);
+    process.exit(1);
+});
