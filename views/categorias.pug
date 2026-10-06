@@ -1,0 +1,117 @@
+//- views/categorias.pug
+extends layout
+
+block content
+    .page-header
+        h1  Gestión de Categorías
+        if usuario.rol === "administrador" || usuario.rol === "moderador"
+            button.btn-success(onclick="abrirModalCrear()")  Nueva Categoría
+    
+    .table-container
+        table.tabla
+            thead
+                tr
+                    th ID
+                    th Nombre
+                    th Descripción
+                    th Productos
+                    if usuario.rol === "administrador" || usuario.rol === "moderador"
+                        th Acciones
+            tbody
+                each cat in categorias
+                    tr
+                        td= cat.id
+                        td= cat.nombre
+                        td= cat.descripcion || '-'
+                        td 
+                            span.badge.badge-usuario= cat.productos ? cat.productos.length : 0
+                        if usuario.rol === "administrador" || usuario.rol === "moderador"
+                            td
+                                button.btn-edit(onclick=`editarCategoria(${cat.id}, '${cat.nombre}', '${cat.descripcion || ''}')`) ✏️ Editar
+                                button.btn-delete(onclick=`eliminarCategoria(${cat.id})`) ️ Eliminar
+
+    // MODAL CREAR/EDITAR
+    #modalCategoria.modal-overlay
+        .modal
+            .modal-header
+                h2#modalTitle Nueva Categoría
+                button.modal-close(onclick="cerrarModal()") ×
+            
+            form#formCategoria
+                input#catId(type="hidden")
+                .form-group
+                    label Nombre
+                    input#catNombre(type="text" placeholder="Ej: Analgésicos" required)
+                
+                .form-group
+                    label Descripción
+                    textarea#catDescripcion(rows="3" placeholder="Descripción de la categoría...")
+                
+                .form-actions
+                    button.btn-primary(type="submit")  Guardar
+                    button.btn-secondary(type="button" onclick="cerrarModal()") Cancelar
+
+block scripts
+    script.
+        const API = 'http://localhost:3000/api';
+        const token = document.cookie.split('token=')[1];
+        const headers = { Authorization: `Bearer ${token}` };
+        
+        function abrirModalCrear() {
+            document.getElementById('modalTitle').textContent = 'Nueva Categoría';
+            document.getElementById('formCategoria').reset();
+            document.getElementById('catId').value = '';
+            document.getElementById('modalCategoria').classList.add('active');
+        }
+        
+        function editarCategoria(id, nombre, descripcion) {
+            document.getElementById('modalTitle').textContent = 'Editar Categoría';
+            document.getElementById('catId').value = id;
+            document.getElementById('catNombre').value = nombre;
+            document.getElementById('catDescripcion').value = descripcion;
+            document.getElementById('modalCategoria').classList.add('active');
+        }
+        
+        function cerrarModal() {
+            document.getElementById('modalCategoria').classList.remove('active');
+        }
+        
+        document.getElementById('formCategoria').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('catId').value;
+            const nombre = document.getElementById('catNombre').value.trim();
+            const descripcion = document.getElementById('catDescripcion').value.trim();
+            
+            if (!nombre) {
+                alert('El nombre es obligatorio');
+                return;
+            }
+            
+            try {
+                if (id) {
+                    await axios.put(`${API}/categorias/${id}`, { nombre, descripcion }, { headers });
+                } else {
+                    await axios.post(`${API}/categorias`, { nombre, descripcion }, { headers });
+                }
+                window.location.reload();
+            } catch (error) {
+                alert('Error: ' + (error.response?.data?.mensaje || error.message));
+            }
+        });
+        
+        async function eliminarCategoria(id) {
+            if (!confirm('¿Estás seguro de eliminar esta categoría?')) return;
+            
+            try {
+                await axios.delete(`${API}/categorias/${id}`, { headers });
+                window.location.reload();
+            } catch (error) {
+                alert('Error al eliminar: ' + error.message);
+            }
+        }
+        
+        document.getElementById('modalCategoria').addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-overlay')) {
+                cerrarModal();
+            }
+        });

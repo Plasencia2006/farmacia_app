@@ -1,0 +1,33 @@
+//- views/registro.pug
+extends layout
+
+block content
+    .auth-container
+        h2  Crear Cuenta
+        form#formRegistro
+            .form-group
+                label Nombre completo
+                input#nombre(type="text" placeholder="Tu nombre completo" required minlength="3")
+                span.error#errorNombre
+            
+            .form-group
+                label Email
+                input#email(type="email" placeholder="correo@ejemplo.com" required)
+                span.error#errorEmail
+            
+            .form-group
+                label Contraseña
+                input#password(type="password" placeholder="Mínimo 6 caracteres" required minlength="6")
+                span.error#errorPassword
+            
+            .form-group
+                label Rol
+                select#rol
+                    option(value="usuario")  Usuario
+                    option(value="moderador")  Moderador
+                    option(value="administrador")  Administrador
+            
+            button.btn-primary(type="submit") Crear Cuenta
+            
+            p.link 
+                a(href="/login") ¿Ya tienes cuenta? Inicia sesión aquí

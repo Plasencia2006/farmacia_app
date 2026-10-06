@@ -1,0 +1,152 @@
+//- views/productos.pug
+extends layout
+
+block content
+    .page-header
+        h1  Gestión de Productos
+        if usuario.rol === "administrador" || usuario.rol === "moderador"
+            button.btn-success(onclick="abrirModalCrear()")  Nuevo Producto
+    
+    .table-container
+        table.tabla
+            thead
+                tr
+                    th ID
+                    th Nombre
+                    th Precio
+                    th Stock
+                    th Categoría
+                    if usuario.rol === "administrador" || usuario.rol === "moderador"
+                        th Acciones
+            tbody
+                each prod in productos
+                    tr
+                        td= prod.id
+                        td= prod.nombre
+                        td S/. #{prod.precio.toFixed(2)}
+                        td
+                            span.badge(class=prod.stock > 10 ? 'badge-usuario' : 'badge-moderador')= prod.stock
+                        td= prod.categoria ? prod.categoria.nombre : 'Sin categoría'
+                        if usuario.rol === "administrador" || usuario.rol === "moderador"
+                            td
+                                button.btn-edit(onclick=`editarProducto(${prod.id}, '${prod.nombre}', ${prod.precio}, ${prod.stock}, ${prod.categoriaId})`) ️ Editar
+                                button.btn-delete(onclick=`eliminarProducto(${prod.id})`)  Eliminar
+
+    // MODAL CREAR/EDITAR
+    #modalProducto.modal-overlay
+        .modal
+            .modal-header
+                h2#modalTitle Nuevo Producto
+                button.modal-close(onclick="cerrarModal()") ×
+            
+            form#formProducto
+                input#prodId(type="hidden")
+                .form-group
+                    label Nombre del Producto
+                    input#prodNombre(type="text" placeholder="Ej: Paracetamol 500mg" required)
+                
+                .form-group
+                    label Precio (S/.)
+                    input#prodPrecio(type="number" step="0.01" min="0" placeholder="0.00" required)
+                
+                .form-group
+                    label Stock
+                    input#prodStock(type="number" min="0" placeholder="0" required)
+                
+                .form-group
+                    label Categoría
+                    select#prodCategoria(required)
+                        option(value="") Seleccionar categoría...
+                        each cat in categorias
+                            option(value=cat.id)= cat.nombre
+                
+                .form-actions
+                    button.btn-primary(type="submit")  Guardar
+                    button.btn-secondary(type="button" onclick="cerrarModal()") Cancelar
+
+block scripts
+    script.
+        const categoriasData = !{JSON.stringify(categorias)};
+        const API = 'http://localhost:3000/api';
+        const token = document.cookie.split('token=')[1];
+        const headers = { Authorization: `Bearer ${token}` };
+        
+        function llenarCategorias(selectedId = '') {
+            const select = document.getElementById('prodCategoria');
+            select.innerHTML = '<option value="">Seleccionar categoría...</option>';
+            categoriasData.forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat.id;
+                option.textContent = cat.nombre;
+                if (cat.id == selectedId) option.selected = true;
+                select.appendChild(option);
+            });
+        }
+        
+        function abrirModalCrear() {
+            document.getElementById('modalTitle').textContent = 'Nuevo Producto';
+            document.getElementById('formProducto').reset();
+            document.getElementById('prodId').value = '';
+            llenarCategorias();
+            document.getElementById('modalProducto').classList.add('active');
+        }
+        
+        function editarProducto(id, nombre, precio, stock, categoriaId) {
+            document.getElementById('modalTitle').textContent = 'Editar Producto';
+            document.getElementById('prodId').value = id;
+            document.getElementById('prodNombre').value = nombre;
+            document.getElementById('prodPrecio').value = precio;
+            document.getElementById('prodStock').value = stock;
+            llenarCategorias(categoriaId);
+            document.getElementById('modalProducto').classList.add('active');
+        }
+        
+        function cerrarModal() {
+            document.getElementById('modalProducto').classList.remove('active');
+        }
+        
+        document.getElementById('formProducto').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('prodId').value;
+            const nombre = document.getElementById('prodNombre').value.trim();
+            const precio = parseFloat(document.getElementById('prodPrecio').value);
+            const stock = parseInt(document.getElementById('prodStock').value);
+            const categoriaId = parseInt(document.getElementById('prodCategoria').value);
+            
+            if (!nombre || isNaN(precio) || isNaN(stock) || !categoriaId) {
+                alert('Completa todos los campos correctamente');
+                return;
+            }
+            
+            try {
+                if (id) {
+                    await axios.put(`${API}/productos/${id}`, { 
+                        nombre, precio, stock, categoriaId 
+                    }, { headers });
+                } else {
+                    await axios.post(`${API}/productos`, { 
+                        nombre, precio, stock, categoriaId 
+                    }, { headers });
+                }
+                window.location.reload();
+            } catch (error) {
+                alert('Error: ' + (error.response?.data?.mensaje || error.message));
+            }
+        });
+        
+        async function eliminarProducto(id) {
+            if (!confirm('¿Estás seguro de eliminar este producto?')) return;
+            
+            try {
+                await axios.delete(`${API}/productos/${id}`, { headers });
+                window.location.reload();
+            } catch (error) {
+                alert('Error al eliminar: ' + error.message);
+            }
+        }
+        
+        document.getElementById('modalProducto').addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-overlay')) {
+                cerrarModal();
+            }
+        });

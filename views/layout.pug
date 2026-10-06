@@ -1,0 +1,40 @@
+//- views/layout.pug
+// ... (head igual)
+//- views/layout.pug
+doctype html
+html(lang="es")
+  head
+    meta(charset="UTF-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    title= titulo || "Farmacia - Sistema"
+    link(rel="stylesheet" href="/css/style.css")
+
+body
+    if usuario
+      nav.navbar
+        .navbar-brand 💊 FarmaciaApp
+        .navbar-menu
+          a(href="/dashboard") 🏠 Inicio
+          a(href="/medicamentos") 💊 Medicamentos
+          
+          // Solo Admin y Moderador ven los catálogos y órdenes
+          if usuario.rol === "administrador" || usuario.rol === "moderador"
+            a(href="/laboratorios")  Laboratorios
+            a(href="/ordenes-compra") 🛒 Orden Compra
+            a(href="/ordenes-venta") 💰 Orden Venta
+            
+          if usuario.rol === "administrador"
+            a(href="#" style="color: #f59e0b") 👑 Admin
+        
+        .user-info
+          span 
+            strong= usuario.nombre
+            span(style="color: #94a3b8; margin-left: 8px") | #{usuario.rol}
+          a.btn-logout(href="/logout") 🚪 Salir
+    
+    main.container
+      block content
+
+    script(src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js")
+    script(src="/js/auth.js")
+    block scripts

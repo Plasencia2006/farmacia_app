@@ -1,0 +1,21 @@
+//- views/login.pug
+extends layout
+
+block content
+    .auth-container
+        h2  Iniciar Sesión
+        form#formLogin
+            .form-group
+                label Email
+                input#email(type="email" placeholder="correo@ejemplo.com" required autocomplete="email")
+                span.error#errorEmail
+            
+            .form-group
+                label Contraseña
+                input#password(type="password" placeholder="••••••••" required autocomplete="current-password")
+                span.error#errorPassword
+            
+            button.btn-primary(type="submit") Ingresar al Sistema
+            
+            p.link 
+                a(href="/registro") ¿No tienes cuenta? Regístrate aquí
