@@ -40,8 +40,24 @@ router.get('/', verificarSesion, (req, res) => {
     res.redirect('/dashboard');
 });
 
-router.get('/dashboard', verificarSesion, (req, res) => {
-    res.render('dashboard', { titulo: 'Dashboard', usuario: req.usuario });
+// routes/views.js - Actualiza la ruta del dashboard
+
+router.get('/dashboard', verificarSesion, async (req, res) => {
+    const { Medicamento, Laboratorio, OrdenCompra, OrdenVenta } = require('../models/index');
+
+    const medicamentosCount = await Medicamento.count();
+    const laboratoriosCount = await Laboratorio.count();
+    const ordenesCompraCount = await OrdenCompra.count();
+    const ordenesVentaCount = await OrdenVenta.count();
+
+    res.render('dashboard', {
+        titulo: 'Dashboard',
+        usuario: req.usuario,
+        medicamentosCount,
+        laboratoriosCount,
+        ordenesCompraCount,
+        ordenesVentaCount
+    });
 });
 
 router.get('/medicamentos', verificarSesion, async (req, res) => {

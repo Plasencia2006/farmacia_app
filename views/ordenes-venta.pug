@@ -55,8 +55,6 @@ block content
 
 block scripts
     script.
-        // ⚠️ NO redeclarar API - ya viene de auth.js
-        const API = '/api';
         const token = document.cookie.split('token=')[1];
         const headers = { Authorization: `Bearer ${token}` };
         
@@ -83,7 +81,7 @@ block scripts
         window.eliminarOrdenVenta = async function(id) {
             if (!confirm('¿Eliminar esta orden de venta?')) return;
             try {
-                await axios.delete(`${API}/ordenes/ventas/${id}`, { headers });
+                await axios.delete(`${window.API}/ordenes/ventas/${id}`, { headers });
                 location.reload();
             } catch (err) { alert('Error: ' + err.message); }
         }
@@ -97,8 +95,8 @@ block scripts
                 Situacion: document.getElementById('ordenVentaSituacion').value
             };
             try {
-                if (id) await axios.put(`${API}/ordenes/ventas/${id}`, data, { headers });
-                else await axios.post(`${API}/ordenes/ventas`, data, { headers });
+                if (id) await axios.put(`${window.API}/ordenes/ventas/${id}`, data, { headers });
+                else await axios.post(`${window.API}/ordenes/ventas`, data, { headers });
                 location.reload();
             } catch (err) { alert('Error: ' + (err.response?.data?.error || err.message)); }
         });

@@ -2,33 +2,86 @@
 extends layout
 
 block content
-    .dashboard
-        h1  Bienvenido al Sistema
-        p 
-            strong Usuario: 
-            span= usuario.nombre
-            span(style="margin: 0 15px; color: #64748b") |
-            if usuario.rol === 'administrador'
-                span.badge.badge-admin  Administrador
-            else if usuario.rol === 'moderador'
-                span.badge.badge-moderador  Moderador
-            else
-                span.badge.badge-usuario  Usuario
+    .dashboard-hero
+        .hero-content
+            h1  Bienvenido al Sistema
+            h2= usuario.nombre
+            .rol-badge(class=`rol-${usuario.rol}`)
+                if usuario.rol === 'administrador'
+                    span 👑 Administrador
+                else if usuario.rol === 'moderador'
+                    span 🔧 Moderador
+                else
+                    span 👤 Usuario
         
-        .cards
+        .stats-grid
+            .stat-card
+                .stat-icon 💊
+                .stat-info
+                    .stat-number= medicamentosCount || 0
+                    .stat-label Medicamentos
+            .stat-card
+                .stat-icon 🏭
+                .stat-info
+                    .stat-number= laboratoriosCount || 0
+                    .stat-label Laboratorios
+            .stat-card
+                .stat-icon 🛒
+                .stat-info
+                    .stat-number= ordenesCompraCount || 0
+                    .stat-label Órdenes Compra
+            .stat-card
+                .stat-icon 💰
+                .stat-info
+                    .stat-number= ordenesVentaCount || 0
+                    .stat-label Órdenes Venta
+    
+    .cards-grid
+        .card
+            .card-icon 💊
+            h3 Gestión de Medicamentos
+            p Administra el catálogo completo de medicamentos, tipos y especialidades.
+            a.card-link(href="/medicamentos") Ir a Medicamentos →
+        
+        .card
+            .card-icon 🏭
+            h3 Laboratorios
+            p Gestiona los laboratorios proveedores de medicamentos.
+            a.card-link(href="/laboratorios") Ir a Laboratorios →
+        
+        if usuario.rol === "administrador" || usuario.rol === "moderador"
             .card
-                h3  Categorías
-                p Visualiza y gestiona las categorías de productos disponibles en la farmacia.
-                a.btn-primary(href="/categorias") Ir a Categorías →
-            
-            if usuario.rol === "administrador" || usuario.rol === "moderador"
-                .card
-                    h3  Productos
-                    p Administra el inventario de productos, precios y stock disponible.
-                    a.btn-primary(href="/productos") Ir a Productos →
-            
-            if usuario.rol === "administrador"
-                .card
-                    h3  Panel de Administrador
-                    p Tienes acceso completo a todas las funcionalidades del sistema.
-                    a.btn-primary(href="#") Configuración →
+                .card-icon 🛒
+                h3 Órdenes de Compra
+                p Registra y controla las compras a proveedores.
+                a.card-link(href="/ordenes-compra") Ir a Compras →
+        
+        if usuario.rol === "administrador" || usuario.rol === "moderador"
+            .card
+                .card-icon 
+                h3 Órdenes de Venta
+                p Gestiona las ventas realizadas a clientes.
+                a.card-link(href="/ordenes-venta") Ir a Ventas →
+        
+        if usuario.rol === "administrador"
+            .card.card-admin
+                .card-icon 👑
+                h3 Panel de Administración
+                p Tienes acceso completo a todas las funcionalidades del sistema.
+                a.card-link(href="#") Configuración →
+
+block scripts
+    script.
+        // Animación de entrada de las tarjetas
+        document.addEventListener('DOMContentLoaded', () => {
+            const cards = document.querySelectorAll('.card, .stat-card');
+            cards.forEach((card, index) => {
+                card.style.opacity = '0';
+                card.style.transform = 'translateY(20px)';
+                setTimeout(() => {
+                    card.style.transition = 'all 0.5s ease';
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 100);
+            });
+        });

@@ -70,8 +70,6 @@ block content
 
 block scripts
     script.
-        // ⚠️ NO redeclarar API - ya viene de auth.js
-        const API = '/api';
         const token = document.cookie.split('token=')[1];
         const headers = { Authorization: `Bearer ${token}` };
         const laboratoriosData = !{JSON.stringify(laboratorios || [])};
@@ -109,7 +107,7 @@ block scripts
         window.eliminarOrdenCompra = async function(id) {
             if (!confirm('¿Eliminar esta orden de compra?')) return;
             try {
-                await axios.delete(`${API}/ordenes/compras/${id}`, { headers });
+                await axios.delete(`${window.API}/ordenes/compras/${id}`, { headers });
                 location.reload();
             } catch (err) { alert('Error: ' + err.message); }
         }
@@ -125,8 +123,8 @@ block scripts
                 Total: parseFloat(document.getElementById('ordenCompraTotal').value)
             };
             try {
-                if (id) await axios.put(`${API}/ordenes/compras/${id}`, data, { headers });
-                else await axios.post(`${API}/ordenes/compras`, data, { headers });
+                if (id) await axios.put(`${window.API}/ordenes/compras/${id}`, data, { headers });
+                else await axios.post(`${window.API}/ordenes/compras`, data, { headers });
                 location.reload();
             } catch (err) { alert('Error: ' + (err.response?.data?.error || err.message)); }
         });

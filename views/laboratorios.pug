@@ -62,8 +62,6 @@ block content
 
 block scripts
     script.
-        // ⚠️ NO redeclarar API - ya viene de auth.js
-        const API = '/api';
         const token = document.cookie.split('token=')[1];
         const headers = { Authorization: `Bearer ${token}` };
         
@@ -92,7 +90,7 @@ block scripts
         window.eliminarLab = async function(id) {
             if (!confirm('¿Eliminar laboratorio?')) return;
             try {
-                await axios.delete(`${API}/laboratorios/${id}`, { headers });
+                await axios.delete(`${window.API}/laboratorios/${id}`, { headers });
                 location.reload();
             } catch (err) { alert('Error: ' + err.message); }
         }
@@ -108,8 +106,124 @@ block scripts
                 contacto: document.getElementById('labCont').value
             };
             try {
-                if (id) await axios.put(`${API}/laboratorios/${id}`, data, { headers });
-                else await axios.post(`${API}/laboratorios`, data, { headers });
+                if (id) await axios.put(`${window.API}/laboratorios/${id}`, data, { headers });
+                else await axios.post(`${window.API}/laboratorios`, data, { headers });
+                location.reload();
+            } catch (err) { alert('Error: ' + (err.response?.data?.error || err.message)); }
+        });
+        
+        document.getElementById('modalLab').addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal-overlay')) window.cerrarModalLab();
+        });//- views/laboratorios.pug
+extends layout
+
+block content
+    .page-header
+        h1 🏭 Gestión de Laboratorios
+        if usuario.rol === "administrador" || usuario.rol === "moderador"
+            button.btn-success(onclick="abrirModalLab()") ➕ Nuevo Laboratorio
+    
+    .table-container
+        table.tabla
+            thead
+                tr
+                    th ID
+                    th Razón Social
+                    th Dirección
+                    th Teléfono
+                    th Email
+                    th Contacto
+                    if usuario.rol === "administrador" || usuario.rol === "moderador"
+                        th Acciones
+            tbody
+                each lab in laboratorios
+                    tr
+                        td= lab.CodLab
+                        td= lab.razonSocial
+                        td= lab.direccion || '-'
+                        td= lab.telefono || '-'
+                        td= lab.email || '-'
+                        td= lab.contacto || '-'
+                        if usuario.rol === "administrador" || usuario.rol === "moderador"
+                            td
+                                button.btn-edit(onclick=`editarLab(${lab.CodLab}, '${lab.razonSocial}', '${lab.direccion || ''}', '${lab.telefono || ''}', '${lab.email || ''}', '${lab.contacto || ''}')`) ✏️ Editar
+                                button.btn-delete(onclick=`eliminarLab(${lab.CodLab})`) 🗑️ Eliminar
+
+    #modalLab.modal-overlay
+        .modal
+            .modal-header
+                h2#modalLabTitle Nuevo Laboratorio
+                button.modal-close(onclick="cerrarModalLab()") ×
+            form#formLab
+                input#labId(type="hidden")
+                .form-group
+                    label Razón Social
+                    input#labRazon(type="text" required)
+                .form-group
+                    label Dirección
+                    input#labDir(type="text")
+                .form-row(style="display: flex; gap: 15px;")
+                    .form-group(style="flex: 1;")
+                        label Teléfono
+                        input#labTel(type="text")
+                    .form-group(style="flex: 1;")
+                        label Email
+                        input#labEmail(type="email")
+                .form-group
+                    label Contacto
+                    input#labCont(type="text")
+                .form-actions
+                    button.btn-primary(type="submit") 💾 Guardar
+                    button.btn-secondary(type="button" onclick="cerrarModalLab()") Cancelar
+
+block scripts
+    script.
+        const token = document.cookie.split('token=')[1];
+        const headers = { Authorization: `Bearer ${token}` };
+        
+        window.abrirModalLab = function() {
+            document.getElementById('modalLabTitle').textContent = 'Nuevo Laboratorio';
+            document.getElementById('formLab').reset();
+            document.getElementById('labId').value = '';
+            document.getElementById('modalLab').classList.add('active');
+        }
+        
+        window.editarLab = function(id, razon, dir, tel, email, cont) {
+            document.getElementById('modalLabTitle').textContent = 'Editar Laboratorio';
+            document.getElementById('labId').value = id;
+            document.getElementById('labRazon').value = razon;
+            document.getElementById('labDir').value = dir;
+            document.getElementById('labTel').value = tel;
+            document.getElementById('labEmail').value = email;
+            document.getElementById('labCont').value = cont;
+            document.getElementById('modalLab').classList.add('active');
+        }
+        
+        window.cerrarModalLab = function() {
+            document.getElementById('modalLab').classList.remove('active');
+        }
+        
+        window.eliminarLab = async function(id) {
+            if (!confirm('¿Eliminar laboratorio?')) return;
+            try {
+                await axios.delete(`${window.API}/laboratorios/${id}`, { headers });
+                location.reload();
+            } catch (err) { alert('Error: ' + err.message); }
+        }
+        
+        document.getElementById('formLab').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('labId').value;
+            const data = {
+                razonSocial: document.getElementById('labRazon').value,
+                direccion: document.getElementById('labDir').value,
+                telefono: document.getElementById('labTel').value,
+                email: document.getElementById('labEmail').value,
+                contacto: document.getElementById('labCont').value
+            };
+            try {
+                if (id) await axios.put(`${window.API}/laboratorios/${id}`, data, { headers });
+                else await axios.post(`${window.API}/laboratorios`, data, { headers });
                 location.reload();
             } catch (err) { alert('Error: ' + (err.response?.data?.error || err.message)); }
         });

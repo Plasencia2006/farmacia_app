@@ -1,10 +1,8 @@
 // public/js/auth.js
 
-// ❌ ANTES (esto causaba el error):
-// const API = 'http://localhost:3000/api';
-
-// ✅ AHORA (URL relativa - funciona en localhost Y en Render):
-const API = '/api';
+// ✅ Usar var y exponer globalmente para evitar conflictos
+var API = '/api';
+window.API = API;
 
 // Validación en el front-end
 function validarEmail(email) {
@@ -19,7 +17,6 @@ if (formLogin) {
         const email = document.getElementById('email').value.trim();
         const password = document.getElementById('password').value;
 
-        // Limpiar errores previos
         document.getElementById('errorEmail').textContent = '';
         document.getElementById('errorPassword').textContent = '';
 
@@ -37,11 +34,7 @@ if (formLogin) {
 
         try {
             const res = await axios.post(`${API}/auth/login`, { email, password });
-
-            // Guardar token en cookie (8 horas = 28800 segundos)
             document.cookie = `token=${res.data.token}; max-age=28800; path=/`;
-
-            // Redirigir al dashboard
             window.location.href = '/dashboard';
         } catch (err) {
             alert(err.response?.data?.mensaje || 'Error al iniciar sesión');
@@ -59,7 +52,6 @@ if (formRegistro) {
         const password = document.getElementById('password').value;
         const rol = document.getElementById('rol').value;
 
-        // Limpiar errores previos
         document.getElementById('errorNombre').textContent = '';
         document.getElementById('errorEmail').textContent = '';
         document.getElementById('errorPassword').textContent = '';
@@ -75,7 +67,7 @@ if (formRegistro) {
             valido = false;
         }
         if (password.length < 6) {
-            document.getElementById('errorPassword').textContent = ' Mínimo 6 caracteres';
+            document.getElementById('errorPassword').textContent = '❌ Mínimo 6 caracteres';
             valido = false;
         }
         if (!valido) return;
@@ -92,18 +84,9 @@ if (formRegistro) {
 
 // CERRAR SESIÓN
 window.cerrarSesion = function () {
-    console.log('🔴 Cerrando sesión...');
-
-    // Eliminar cookie
     document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
     document.cookie = 'token=; Max-Age=0; path=/;';
-
-    // Limpiar localStorage
     localStorage.removeItem('token');
     sessionStorage.removeItem('token');
-
-    console.log('✅ Cookie eliminada. Redirigiendo...');
-
-    // Redirigir al login
     window.location.href = '/login';
 };
